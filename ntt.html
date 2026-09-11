@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DATA NTT ⇄ DATA VENDOR → DATA DOC — per hari (auto-clear)</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',Arial,sans-serif; }
+  body { background:#0f172a; color:#e2e8f0; padding:20px; }
+  .container { max-width:1600px; margin:0 auto; }
+  h1 { font-size:18px; color:#38bdf8; margin-bottom:8px; }
+  .safebar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#12291c; border:1px solid #22c55e;
+    border-radius:8px; padding:8px 14px; margin-bottom:14px; font-size:12px; }
+  .safebar b { color:#4ade80; }
+  .safebar .day { color:#fbbf24; font-weight:bold; }
+  .safebar .lastsave { color:#64748b; font-size:10.5px; margin-left:auto; }
+  .panels { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  .panel { flex:1; min-width:420px; border:1px solid #475569; border-radius:8px; overflow:hidden; }
+  .panel-head { padding:8px 12px; font-size:12px; font-weight:bold; letter-spacing:1px;
+    display:flex; align-items:center; gap:10px; border-bottom:1px solid #475569; }
+  .panel-head.n { background:#0c2a48; color:#7dd3fc; }
+  .panel-head.v { background:#2e1065; color:#c4b5fd; }
+  .panel-head .tag { font-size:10px; padding:2px 9px; border-radius:10px; font-weight:bold; background:#334155; color:#e2e8f0; }
+  .panel-head .cnt { font-weight:normal; font-size:11px; color:#94a3b8; }
+  .panel-head .grp { margin-left:auto; display:flex; gap:6px; }
+  .panel-head button { border:none; border-radius:5px; padding:4px 10px; font-size:10.5px; font-weight:bold;
+    cursor:pointer; background:#334155; color:#94a3b8; }
+  .panel-head button:hover { background:#38bdf8; color:#0f172a; }
+  .mode-toggle { display:inline-flex; align-items:center; gap:6px; margin-left:12px; cursor:pointer;
+    font-size:11px; font-weight:bold; color:#94a3b8; background:#1e293b; border:1px solid #475569;
+    border-radius:6px; padding:3px 10px; user-select:none; }
+  .mode-toggle:hover { border-color:#38bdf8; color:#e2e8f0; }
+  .mode-toggle input { accent-color:#38bdf8; width:14px; height:14px; cursor:pointer; }
+  .mode-toggle.on { background:#0c4a6e; border-color:#38bdf8; color:#7dd3fc; }
+  .panel-body { padding:8px 10px; background:#1e293b; }
+  .paste-chute { position:relative; }
+  textarea { width:100%; height:64px; background:#0f172a; border:1px dashed #475569; border-radius:8px;
+    color:#e2e8f0; padding:8px 10px; font-family:Consolas,monospace; font-size:11.5px; resize:none; outline:none; }
+  textarea:focus { border-color:#38bdf8; border-style:solid; }
+  .panel.v textarea:focus { border-color:#a78bfa; }
+  .chute-hint { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#475569; font-size:12.5px; font-weight:bold; pointer-events:none; }
+  .parseinfo { font-size:11.5px; margin-top:5px; color:#94a3b8; min-height:16px; }
+  .parseinfo b { color:#4ade80; }
+  .parseinfo .plus { color:#fbbf24; font-weight:bold; }
+  .rawbar { display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap; }
+  .rawbar .lbl { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:.5px; font-weight:bold; }
+  .rawbar .cnt { font-size:10px; color:#475569; }
+  .mini2 { padding:4px 10px; font-size:10.5px; border:none; border-radius:6px;
+    background:#334155; color:#94a3b8; cursor:pointer; }
+  .mini2:hover { background:#475569; color:#e2e8f0; }
+  .mini2.on { background:#22c55e; color:#052e16; }
+  .rawtext { margin-top:6px; border:1px solid #475569; border-radius:8px; background:#0f172a;
+    color:#94a3b8; font-family:Consolas,monospace; font-size:11px; padding:10px 12px;
+    max-height:420px; overflow:auto; white-space:pre-wrap; word-break:break-all; line-height:1.5; display:none; }
+  .rawmini { margin-top:8px; border:1px solid #475569; border-radius:8px; overflow:auto; max-height:420px; }
+  .rawmini table { width:100%; border-collapse:collapse; background:#1e293b; }
+  .rawmini th { background:#0b1526; color:#94a3b8; border:1px solid #3b5578; padding:7px 6px;
+    font-size:9.5px; text-transform:uppercase; text-align:left; white-space:nowrap; position:sticky; top:0; z-index:2; }
+  .rawmini td { border:1px solid #2e4159; padding:6px 7px; font-size:11px; white-space:nowrap; }
+  .rawmini tr:hover td { background:#273449; }
+  .rawmini tr.rowm td { background:#12291c; }
+  .rawmini tr.rowm td:first-child { border-left:3px solid #22c55e; }
+  .rawmini tr.rowm:hover td { background:#1a3a28; }
+  .rawmini td.num { background:#0b1526; color:#64748b; text-align:center; font-size:10.5px; font-weight:bold;
+    position:sticky; left:0; z-index:1; }
+  .rawmini tr.rowm td.num { background:#0f221a; color:#4ade80; }
+  .summary { display:flex; gap:12px; flex-wrap:wrap; margin:8px 0 10px; }
+  .card { background:#1e293b; border:1px solid #334155; border-radius:10px; padding:10px 18px; }
+  .card .label { font-size:10px; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; }
+  .card .value { font-size:17px; font-weight:bold; color:#4ade80; }
+  .card .value.b { color:#38bdf8; } .card .value.o { color:#fb923c; }
+  .card .value.safe { color:#4ade80; } .card .value.unsafe { color:#f87171; }
+  .chips { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; align-items:center; }
+  .chips .lbl { font-size:11px; color:#64748b; text-transform:uppercase; }
+  #matchChips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .chip { padding:6px 14px; border-radius:20px; border:1px solid #334155; background:#1e293b;
+    color:#94a3b8; cursor:pointer; font-size:12px; font-weight:bold; }
+  .chip.active { background:#38bdf8; color:#0f172a; border-color:#38bdf8; }
+  .chip.g.active { background:#22c55e; border-color:#22c55e; color:#052e16; }
+  .chip.r.active { background:#ef4444; border-color:#ef4444; color:#fff; }
+  .toolbar { display:flex; gap:8px; margin:10px 0; flex-wrap:wrap; align-items:center; }
+  input[type=text] { flex:1; min-width:200px; padding:10px 14px; border-radius:8px; border:1px solid #334155;
+    background:#1e293b; color:#e2e8f0; font-size:14px; outline:none; }
+  input[type=text]:focus { border-color:#38bdf8; }
+  .btn { padding:10px 16px; border:none; border-radius:8px; cursor:pointer; font-weight:bold; font-size:13px; color:#0f172a; }
+  .btn.g { background:#22c55e; } .btn.g:hover { background:#16a34a; }
+  .btn.s { background:#334155; color:#94a3b8; } .btn.s:hover { background:#475569; color:#e2e8f0; }
+  .sheet { margin-bottom:16px; border:1px solid #475569; border-radius:8px; overflow:hidden; }
+  .sheet-title { padding:8px 12px; font-size:12px; font-weight:bold; letter-spacing:1px;
+    display:flex; align-items:center; gap:8px; border-bottom:1px solid #475569; }
+  .sheet-title.n { background:#0c2a48; color:#7dd3fc; }
+  .sheet-title.v { background:#2e1065; color:#c4b5fd; }
+  .sheet-title.d { background:#3b2a08; color:#fbbf24; }
+  .sheet-title .cnt { font-weight:normal; font-size:11px; color:#94a3b8; }
+  .sheet-title .grp { margin-left:auto; display:flex; gap:6px; }
+  .sheet-title button { border:none; border-radius:5px; padding:4px 12px;
+    font-size:11px; font-weight:bold; cursor:pointer; background:#334155; color:#94a3b8; }
+  .sheet-title button:hover { background:#38bdf8; color:#0f172a; }
+  .sheet-title button.on { background:#22c55e; color:#052e16; }
+  .tbl-wrap { overflow:auto; max-height:380px; }
+  table { width:100%; border-collapse:collapse; background:#1e293b; }
+  th { background:#0b1526; color:#94a3b8; border:1px solid #3b5578; padding:8px 7px;
+    font-size:10px; text-transform:uppercase; text-align:left; white-space:nowrap; position:sticky; top:0; z-index:2; }
+  td { border:1px solid #2e4159; padding:6px 8px; font-size:11.5px; white-space:nowrap; }
+  tr:hover td { background:#273449; }
+  tr.rowm td { background:#12291c; }
+  tr.rowm td:first-child { border-left:3px solid #22c55e; }
+  tr.rowm:hover td { background:#1a3a28; }
+  td.num { background:#0b1526; color:#64748b; text-align:center; font-size:11px; font-weight:bold;
+    position:sticky; left:0; z-index:1; }
+  tr.rowm td.num { background:#0f221a; color:#4ade80; }
+  tr:hover td.num { background:#16223a; }
+  .mono { font-family:Consolas,monospace; }
+  .amt { text-align:right; font-weight:bold; color:#4ade80; }
+  .amt.neg { color:#f87171; }
+  .amt.warn { color:#fb923c; }
+  .dim { color:#64748b; }
+  td.nnt { color:#7dd3fc; cursor:copy; max-width:200px; overflow:hidden; text-overflow:ellipsis; }
+  td.nnt:hover { text-decoration:underline; color:#bae6fd; }
+  .bdg { display:inline-block; padding:3px 10px; border-radius:12px; font-size:10px; font-weight:bold; white-space:nowrap; }
+  .bdg.ok { background:#14532d; color:#4ade80; }
+  .bdg.warn { background:#45250a; color:#fb923c; }
+  .bdg.n { background:#0c2a48; color:#7dd3fc; }
+  .bdg.v { background:#2e1065; color:#c4b5fd; }
+  .bdg.bad { background:#451a1a; color:#f87171; }
+  .bdg.info { background:#1e3a5f; color:#7dd3fc; }
+  .mini, .del { border:none; border-radius:5px; cursor:pointer; padding:4px 9px; font-size:11px; font-weight:bold; }
+  .mini { background:#334155; color:#94a3b8; } .mini:hover { background:#38bdf8; color:#0f172a; }
+  .mini.vv { background:#1a3344; color:#7dd3fc; } .mini.vv:hover { background:#38bdf8; color:#0f172a; }
+  .del { background:#3f1d2b; color:#f87171; } .del:hover { background:#ef4444; color:#fff; }
+  .empty { text-align:center; color:#64748b; padding:22px; }
+  .footer { margin-top:6px; font-size:11.5px; color:#64748b; text-align:center; line-height:1.6; }
+  .toast { position:fixed; bottom:25px; left:50%; transform:translateX(-50%); background:#22c55e;
+    color:#052e16; padding:10px 25px; border-radius:30px; font-weight:bold; display:none; z-index:99; }
+  #traceBar { position:fixed; top:12px; left:50%; transform:translateX(-50%); background:#7c3aed; color:#fff;
+    padding:8px 18px; border-radius:22px; font-size:12px; font-weight:bold; display:none; z-index:98;
+    box-shadow:0 4px 14px rgba(0,0,0,.45); align-items:center; gap:8px; }
+  #traceBar .tnnt { font-family:Consolas,monospace; background:rgba(255,255,255,.18); padding:2px 10px; border-radius:12px; }
+  #traceBar button { border:none; background:#fff; color:#7c3aed; border-radius:14px; padding:4px 14px;
+    cursor:pointer; font-weight:bold; font-size:11px; }
+  #result { display:none; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>DATA NTT ⇄ DATA VENDOR → DATA DOC — data per hari, bersih otomatis tiap ganti hari</h1>
+
+  <div class="safebar">
+    <b>🔒 100% lokal</b> — data hanya di browser ini
+    <span class="day" id="dayNow"></span>
+    <span>🔄 auto-clear tiap ganti hari (data = hari ini saja)</span>
+    <span class="lastsave" id="lastSave"></span>
+  </div>
+
+  <div class="panels">
+    <div class="panel n">
+      <div class="panel-head n">
+        <span class="tag">NTT</span> DATA NTT <span class="cnt" id="hNtt"></span>
+        <label class="mode-toggle" title="Mode Minera: format data mentah berbeda">
+          <input type="checkbox" id="modeMinera" onchange="toggleMineraMode()">
+          <span>MODE MINERA</span>
+        </label>
+        <span class="grp">
+          <button onclick="copySec('ntt')">⧉ Copy NTT</button>
+          <button onclick="clearPanel('ntt')" title="kosongkan data NTT">🗑 Kosongkan</button>
+        </span>
+      </div>
+      <div class="panel-body">
+        <div class="paste-chute">
+          <textarea id="taNtt" placeholder=""></textarea>
+          <div class="chute-hint" id="chNtt">📋 Paste di sini — langsung NAMBAH ke data (bisa berkali-kali, anti dobel)</div>
+        </div>
+        <div class="parseinfo" id="infoNtt"></div>
+        <div class="rawbar">
+          <span class="lbl">Mentah:</span>
+          <button class="mini2" id="btnRawNtt" onclick="toggleRaw('ntt')">📄 Lihat</button>
+          <button class="mini2" onclick="copyRaw('ntt')">⧉ Copy Mentah</button>
+          <span class="cnt" id="rawCntNtt"></span>
+        </div>
+        <div class="rawtext" id="rawTextNtt"></div>
+        <div class="rawmini" id="rawNtt"></div>
+      </div>
+    </div>
+    <div class="panel v">
+      <div class="panel-head v"><span class="tag">VENDOR</span> DATA VENDOR <span class="cnt" id="hVen"></span>
+        <span class="grp">
+          <button onclick="copySec('ven')" title="copy baris vendor yang TAMPIL (match penuh, urut NTT)">⧉ Copy Vendor (Tampil)</button>
+          <button onclick="clearPanel('ven')" title="kosongkan data Vendor">🗑 Kosongkan</button>
+        </span></div>
+      <div class="panel-body">
+        <div class="paste-chute">
+          <textarea id="taVen" placeholder=""></textarea>
+          <div class="chute-hint" id="chVen">📋 Paste di sini — langsung NAMBAH ke data (bisa berkali-kali, anti dobel)</div>
+        </div>
+        <div class="parseinfo" id="infoVen"></div>
+        <div class="rawbar">
+          <span class="lbl">Mentah:</span>
+          <button class="mini2" id="btnRawVen" onclick="toggleRaw('ven')">📄 Lihat</button>
+          <button class="mini2" onclick="copyRaw('ven')">⧉ Copy Mentah</button>
+          <span class="cnt" id="rawCntVen"></span>
+        </div>
+        <div class="rawtext" id="rawTextVen"></div>
+        <div class="rawmini" id="rawVen"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="traceBar">🎯 Melacak: <span class="tnnt" id="traceNnt"></span>
+    <button onclick="releaseTrace()">✕ Lepas (ESC)</button></div>
+
+  <div id="result">
+    <div class="summary">
+      <div class="card"><div class="label">🔒 Verifikasi Anti-Dobel</div><div class="value safe" id="cSafe">🔒 AMAN</div></div>
+      <div class="card"><div class="label">✓ Match (Kode+Rek+Nominal)</div><div class="value" id="cMatch">0</div></div>
+      <div class="card"><div class="label">Total DATA DOC (Match)</div><div class="value" id="cDoc">0</div></div>
+      <div class="card"><div class="label">Baris NTT (Master)</div><div class="value b" id="cNtt">0</div></div>
+      <div class="card"><div class="label">Baris Vendor (Tampil/Total)</div><div class="value o" id="cVen">0</div></div>
+    </div>
+
+    <div class="chips">
+      <span class="lbl">Filter:</span>
+      <span id="matchChips">
+        <button class="chip active" data-m="">Semua (0)</button>
+        <button class="chip g" data-m="both">✓ Match (0)</button>
+        <button class="chip r" data-m="diff">≠ Nominal Beda — audit (0)</button>
+        <button class="chip" data-m="rek">Rek≠ Beda — audit (0)</button>
+        <button class="chip" data-m="ntt">NTT saja (0)</button>
+        <button class="chip" data-m="ven">⏳ Vendor saja — audit (0)</button>
+      </span>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="search" placeholder="🔍 Cari: NNT / nama / nama rek / no rek / username / bank / vendor id / nominal (100.000 / 100,000) / status...">
+      <button class="btn g" onclick="copyAll()">📋 Copy DOC</button>
+      <button class="btn s" onclick="cleanDoubles()" title="gabungkan baris dobel (NNT sama) + audit ulang">🧹 Bersihkan &amp; Audit</button>
+      <button class="btn s" onclick="resetAll()">↩ Reset hapus</button>
+      <button class="btn s" onclick="clearAll()">🗑️ Clear Semua</button>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-title n">DATA NTT (MASTER) <span class="cnt" id="tNtt"></span>
+        <span class="grp">
+          <button id="btnMN" onclick="toggleMatchSort('n')">⇅ Match dulu</button>
+          <button onclick="copySec('ntt')">⧉ Copy NTT</button>
+        </span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th style="width:34px">No</th><th>Date</th><th style="text-align:right">Amount</th><th>Bank Code</th><th>Bank No</th>
+          <th>Account Name</th><th>Ref (NNT)</th><th>Vendor Id</th><th>Exception</th><th>Status</th><th>Datetime</th><th>Revert</th><th>Match</th><th style="width:120px"></th>
+        </tr></thead>
+        <tbody id="bNtt"></tbody>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-title v">DATA VENDOR — MATCH KODE+REK+NOMINAL (URUT NTT) <span class="cnt" id="tVen"></span>
+        <span class="grp">
+          <button onclick="copyVenAll()" title="copy SEMUA baris vendor yang sesuai dengan NTT saja">⧉ Copy Vendor (Semua)</button>
+        </span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr>
+          <th style="width:34px" title="nomor urut mengikuti urutan DATA NTT">No</th><th>Datetime</th><th>Brand</th><th>Platform</th><th>Order (NNT)</th>
+          <th>IDN</th><th>WD</th><th>Bank</th><th>Nama Rek</th><th>No Rek</th><th>Username</th>
+          <th style="text-align:right">Nominal</th><th>Validasi</th><th>IDN/WD</th><th>Match</th><th style="width:110px"></th>
+        </tr></thead>
+        <tbody id="bVen"></tbody>
+      </table></div>
+    </div>
+
+    <div class="sheet">
+      <div class="sheet-title d">DATA DOC — NOREK &amp; NOMINAL DARI NTT <span class="cnt" id="tDoc"></span>
+        <span class="grp"><button onclick="copySec('doc')">⧉ Copy DOC</button></span></div>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th style="width:34px" title="nomor urut mengikuti urutan DATA NTT">No</th><th></th><th>Bank</th><th title="diambil dari DATA NTT (master) — tidak mungkin tertukar">No. Rek (NTT)</th><th>Username</th><th>Nama Rek</th><th style="text-align:right">Nominal</th><th>Status</th><th style="width:80px"></th></tr></thead>
+        <tbody id="bDoc"></tbody>
+      </table></div>
+    </div>
+
+    <div class="footer">
+      <b>🌅 DATA PER HARI:</b> ganti hari (tanggal lokal berubah) → <b>semua data otomatis dibersihkan</b> — NTT, vendor, DOC, mentah, filter. Data yang tampil = hari ini saja. Auto-save hanya untuk refresh dalam hari yang sama. (File backup dihapus sesuai permintaan.)<br>
+      <b>KUNCI DATA = KODE NTT (selalu unik).</b> Double data = hanya jika NNT identik 2× → otomatis digabung. <b>Norek+nominal sama (NNT beda) = transaksi BERBEDA — TIDAK digabung</b> (badge ×N). Match 3 syarat: KODE+NOREK+NOMINAL sama (norek ***** tidak dibandingkan). Norek beda → Rek≠. Nominal beda → ≠. Nomor beraturan ikut NTT.<br>
+      <b>🔒 AUDIT:</b> tiap perubahan dicek ulang (dobel? norek DOC meleset?) → kartu 🔒; Copy DOC diblokir kalau ada masalah.<br>
+      <b>DATA MENTAH:</b> tersimpan persis aslinya (per hari) — <b>📄 Lihat</b> / <b>⧉ Copy Mentah</b> • <b>Klik NNT</b> = copy kode • 🎯 = lacak (ESC) • ✕ = buang baris
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast">✔ Copied!</div>
+
+<script>
+let RDATA = [], VDATA = [];
+const MAP = new Map();
+const rSet = new Set(), vSet = new Set(), dSet = new Set();
+let CURR = [], CURV = [], CURD = [];
+let modeFilter = '', sortMatchN = false, isolate = null, isoDisp = '';
+const RAWS = { ntt: [], ven: [] };
+const RAW  = { ntt: '', ven: '' };
+const showRaw = { ntt: false, ven: false };
+const fmt = n => (n == null ? null : n).toLocaleString('en-US');
+const taNtt = document.getElementById('taNtt');
+const taVen = document.getElementById('taVen');
+
+// ============ AUTO-SAVE PER HARI + AUTO-CLEAR TIAP GANTI HARI ============
+const LS_KEY = 'ntt_vendor_doc_harian_v1';
+const todayStr = () => { const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+let CUR_DAY = todayStr();
+let newDayCleared = false;
+
+function updateDayLabel() {
+  const el = document.getElementById('dayNow');
+  if (el) el.textContent = '📅 ' + CUR_DAY; }
+
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      day: CUR_DAY, RDATA, VDATA, RAWS, RAW, modeFilter, sortMatchN }));
+    const el = document.getElementById('lastSave');
+    if (el) el.textContent = '💾 tersimpan ' + new Date().toLocaleTimeString('id-ID') + ' (per hari)';
+  } catch (e) {} }
+
+function loadState() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+    if (!s) return false;
+    if (s.day !== CUR_DAY) {
+      try { localStorage.removeItem(LS_KEY); } catch (e) {}
+      newDayCleared = true;
+      return false; }
+    if (Array.isArray(s.RDATA) || Array.isArray(s.VDATA)) {
+      RDATA = s.RDATA || []; VDATA = s.VDATA || [];
+      RAWS.ntt = (s.RAWS && s.RAWS.ntt) || []; RAWS.ven = (s.RAWS && s.RAWS.ven) || [];
+      RAW.ntt = (s.RAW && s.RAW.ntt) || ''; RAW.ven = (s.RAW && s.RAW.ven) || '';
+      modeFilter = s.modeFilter || ''; sortMatchN = !!s.sortMatchN;
+      return (RDATA.length + VDATA.length) > 0;
+    }
+  } catch (e) {}
+  return false; }
+
+function wipeAllData(dayMsg) {
+  taNtt.value = ''; taVen.value = '';
+  RDATA = []; VDATA = []; MAP.clear();
+  rSet.clear(); vSet.clear(); dSet.clear();
+  isolate = null; isoDisp = '';
+  clearRaw('ntt'); clearRaw('ven');
+  ['infoNtt', 'infoVen'].forEach(id => document.getElementById(id).innerHTML = '');
+  document.getElementById('result').style.display = 'none';
+  render();
+  if (dayMsg) showToast(dayMsg); }
+
+setInterval(() => {
+  const t = todayStr();
+  if (t !== CUR_DAY) {
+    CUR_DAY = t;
+    updateDayLabel();
+    try { localStorage.removeItem(LS_KEY); } catch (e) {}
+    wipeAllData('🌅 Ganti hari (' + CUR_DAY + ') — semua data dibersihkan otomatis'); }
+}, 30000);
+window.addEventListener('beforeunload', saveState);
+
+// ---------- util ----------
+function numVal(s) { s = (s || '').trim();
+  if (/^\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?$/.test(s)) return +s.split(',')[0].replace(/\./g, '');
+  if (/^\d{1,3}(?:,\d{3})+$/.test(s)) return +s.replace(/,/g, '');
+  if (/^\d{4,9}$/.test(s)) return +s;
+  return null; }
+function numSigned(s) { s = (s || '').trim(); const neg = /^[-–]/.test(s);
+  const v = numVal(s.replace(/^[-–]/, '')); return v != null ? { v, neg } : null; }
+const NNT_RE = /NNT-[0-9a-zA-Z][0-9a-zA-Z\-–—]{5,}/;
+const BANK_RE = /^[A-Z][A-Z .&'\-]{1,19}$/;
+const USER_RE = /^[A-Za-z][A-Za-z0-9_.\-]{2,}$/;
+const REK_RE = /^[\d*]{6,}$/, REKPURE = /^\d{6,}$/;
+const ST_RE = /^(SUCCESS|REJECTED|FAILED|PENDING|CANCELLED|EXPIRED)/i;
+const VID_RE = /^\d{2}-\d{8,}$/;
+const nntOf = s => { const m = (s || '').match(NNT_RE);
+  return m ? m[0].replace(/[–—]/g, '-').replace(/-+$/, '').trim() : ''; };
+const keyOf = n => (n || '').trim().toUpperCase().replace(/[–—]/g, '-').replace(/\s+/g, '');
+const normRek = r => { r = String(r == null ? '' : r).trim(); return (r && !r.includes('*')) ? r : ''; };
+const splitF = line => line.split(/\t+/).map(s => s.trim());
+const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test((s || '').trim());
+
+// ================= PARSER NTT =================
+function extractBlockFull(b, rawNo) {
+  const L = b.map(l => l.trim()).filter(l => l && !/^\d+\.\s*$/.test(l));
+  const rec = { no: rawNo, nnt:'', date:'', amount:null, bankCode:'', norek:'', name:'', vendorId:'',
+                exception:'', status:'-', datetime:'', revert:'', username:'' };
+  const di = L.findIndex(isDate);
+  if (di >= 0) {
+    rec.date = L[di];
+    let j = di + 1;
+    const v = numVal(L[j]); if (v != null) { rec.amount = v; j++; }
+    if (/^\d{1,5}$/.test(L[j] || '')) { rec.bankCode = L[j]; j++; }
+    if (REK_RE.test(L[j] || '')) { rec.norek = L[j]; j++; }
+    if (j < L.length && /^[A-Za-z]/.test(L[j]) && !ST_RE.test(L[j]) && !/NNT-/.test(L[j]) && !/^exception$/i.test(L[j])) { rec.name = L[j]; j++; }
+    if (j < L.length && /NNT-/.test(L[j])) { rec.nnt = nntOf(L[j]); j++; }
+    if (j < L.length && VID_RE.test(L[j] || '')) { rec.vendorId = L[j]; j++; }
+  }
+  if (!rec.nnt) { const nl = L.find(l => /NNT-/.test(l)); if (nl) rec.nnt = nntOf(nl); }
+  const ex = L.find(l => /^exception$/i.test(l)); if (ex) rec.exception = ex;
+  const dm = L.map(l => l.match(/^\d{1,2}-\d{1,2}-\d{4}[ T][\d:]{8}$/)).find(Boolean);
+  if (dm) { rec.datetime = dm[0];
+    const dti = L.indexOf(dm[0]);
+    if (dti >= 0 && dti + 1 < L.length && ST_RE.test(L[dti + 1])) rec.revert = L[dti + 1].toUpperCase(); }
+  const stl = L.find(l => ST_RE.test(l));
+  if (stl) rec.status = /^FAILED/i.test(stl) ? 'FAILED - REFUND' : (/^REJECT/i.test(stl) ? 'REJECTED' : stl.toUpperCase());
+  return rec.nnt ? rec : null;
+}
+function parseNTTFields(f, no) {
+  const idxs = []; f.forEach((s, i) => { if (nntOf(s)) idxs.push(i); });
+  if (!idxs.length) return null;
+  const ni = idxs[0], lim = idxs.length > 1 ? idxs[1] : f.length;
+  let norek = '', username = '';
+  for (let i = ni - 1; i >= 0; i--) { const t = f[i]; if (!t) continue;
+    if (!username && USER_RE.test(t) && !BANK_RE.test(t)) { username = t; continue; }
+    if (!norek && REK_RE.test(t)) norek = t;
+    if (norek && username) break; }
+  let amount = null;
+  for (let i = ni + 1; i < lim; i++) { const r = numSigned(f[i]); if (r && !r.neg) { amount = r.v; break; } }
+  return { no, nnt: nntOf(f[ni]), norek, username, amount, date:'', bankCode:'', name:'', vendorId:'',
+           exception:'', status:'-', datetime:'', revert:'', removed: false };
+}
+function parseNttArr(text, startNo) {
+  const out = []; let fail = 0;
+  const lines = text.split(/\r?\n/);
+  const markerRe = /^\s*(\d+)\.\s*$/;
+  let blocks = [], rawNos = [];
+  if (lines.some(l => markerRe.test(l))) {
+    let cur = null, cno = null;
+    lines.forEach(l => { const m = l.match(markerRe);
+      if (m) { if (cur) { blocks.push(cur); rawNos.push(cno); } cur = [l]; cno = +m[1]; }
+      else if (cur) cur.push(l); });
+    if (cur) { blocks.push(cur); rawNos.push(cno); }
+  } else {
+    const idxs = []; lines.forEach((l, i) => { if (l.includes('NNT-')) idxs.push(i); });
+    if (idxs.length) { let s = 0;
+      idxs.forEach(ix => { blocks.push(lines.slice(s, ix + 1)); rawNos.push(null); s = ix + 1; });
+      if (s < lines.length) blocks[blocks.length - 1].push(...lines.slice(s));
+    } else { blocks = [lines]; rawNos.push(null); }
+  }
+  const totalBlocks = blocks.length;
+  let seq = startNo;
+  blocks.forEach((b, bi) => {
+    const ni = b.findIndex(l => l.includes('NNT-')); if (ni < 0) return;
+    const nnt = nntOf(b[ni]); if (!nnt) { fail++; return; }
+    const no = rawNos[bi] || ++seq;
+    let rec = null;
+    if (b[ni].includes('\t')) {
+      const f = splitF(b[ni]);
+      const col = extractBlockFull(f, no);
+      if (col && col.date && col.amount != null) rec = col;
+      else {
+        rec = parseNTTFields(f, no);
+        if (rec && rec.amount == null) { const r2 = extractBlockFull(b, no);
+          if (r2) rec = { ...rec, date:r2.date, amount:r2.amount, bankCode:r2.bankCode, name:r2.name, vendorId:r2.vendorId,
+                          exception:r2.exception, status:r2.status, datetime:r2.datetime, revert:r2.revert }; }
+      }
+    } else rec = extractBlockFull(b, no);
+    if (rec && rec.nnt) out.push(rec); else fail++;
+  });
+  return { rows: out, fail, blocks: totalBlocks };
+}
+
+// ================= PARSER MINERA (format berbeda, mapping ke struktur sama) =================
+function parseMineraArr(text, startNo) {
+  const out = [];
+  let fail = 0;
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+  lines.forEach((line, idx) => {
+    const cols = line.split(/\t/).map(s => s.trim());
+    // Kolom: 0=datetime, 1=status, 2=brand/user, 3=NNT, 4=Bank, 5=norek, 6=nama, 7=nominal, 8=fee, 9=total
+    if (cols.length < 8) { fail++; return; }
+    const nnt = nntOf(cols[3]) || nntOf(line);
+    if (!nnt) { fail++; return; }
+    const rawAmt = (cols[7] || '').replace(/^Rp\s*/i, '').trim();
+    let amount = numVal(rawAmt);
+    if (amount == null) {
+      const cleaned = rawAmt.replace(/[^\d]/g, '');
+      amount = cleaned ? +cleaned : null;
+    }
+    const rec = {
+      no: startNo + idx,
+      nnt,
+      date: (cols[0] || '').split(/\s+/)[0] || '',
+      datetime: cols[0] || '',
+      status: (cols[1] || '-').toUpperCase(),
+      vendorId: cols[2] || '',
+      bankCode: (cols[4] || '').toUpperCase().replace(/\s+/g, ''),
+      norek: cols[5] || '',
+      name: cols[6] || '',
+      amount,
+      exception: '',
+      revert: '',
+      username: '',
+      removed: false
+    };
+    out.push(rec);
+  });
+  return { rows: out, fail, blocks: lines.length };
+}
+
+let modeMinera = false;
+function toggleMineraMode() {
+  const cb = document.getElementById('modeMinera');
+  modeMinera = !!cb.checked;
+  const lab = cb.closest('.mode-toggle');
+  if (lab) lab.classList.toggle('on', modeMinera);
+  try { localStorage.setItem('ntt_mode_minera', modeMinera ? '1' : '0'); } catch(e) {}
+  const hint = document.getElementById('chNtt');
+  if (hint) {
+    hint.textContent = modeMinera
+      ? '📋 MODE MINERA aktif — paste data mentah Minera di sini'
+      : '📋 Paste di sini — langsung NAMBAH ke data (bisa berkali-kali, anti dobel)';
+  }
+  showToast(modeMinera ? '⚡ MODE MINERA aktif' : '📋 Mode NTT normal aktif');
+}
+
+// ================= PARSER VENDOR =================
+function parseVendorBlock(seg) {
+  const rec = { nnt:'', datetime:'', brand:'', platform:'', idn:'', wd:'', bank:'', namaRek:'',
+                norek:'', username:'', amountRaw:'', amount:null, neg:false, validasi:'', idnSt:'', wdSt:'', removed:false };
+  let st = 0;
+  const h = (seg[0] || '').match(/^\s*(\d{4}-\d{2}-\d{2}[ T][\d:]+)\s+(.+)$/);
+  if (h) { rec.datetime = h[1];
+    let rest = h[2].split(/\t+/).map(s => s.trim()).filter(Boolean);
+    if (rest.length === 1 && /\s/.test(rest[0])) rest = rest[0].trim().split(/\s+/);
+    rec.brand = rest[0] || ''; rec.platform = rest[1] || ''; st = 1; }
+  for (let i = st; i < seg.length; i++) {
+    const l = seg[i].trim(); if (!l) continue; let m;
+    if      (m = l.match(/^Order\s*:\s*(.+)$/i))      rec.nnt = nntOf(m[1]) || m[1].trim();
+    else if (m = l.match(/^IDN\s*:\s*(.*)$/i))        { const v = m[1].trim(); if (v) rec.idn = v; else if (!rec.idnSt) rec.idnSt = (seg[i + 1] || '').trim(); }
+    else if (m = l.match(/^WD\s*:\s*(.*)$/i))         { const v = m[1].trim(); if (v) rec.wd = v; else if (!rec.wdSt) rec.wdSt = (seg[i + 1] || '').trim(); }
+    else if (m = l.match(/^Bank\s*:\s*(.+)$/i))       rec.bank = m[1].trim().toUpperCase();
+    else if (m = l.match(/^Nama Rek\s*:\s*(.+)$/i))   rec.namaRek = m[1].trim();
+    else if (m = l.match(/^No Rek\s*:\s*(.+)$/i))     rec.norek = m[1].trim();
+    else if (m = l.match(/^Validasi\s*:\s*(.*)$/i))   rec.validasi = m[1].trim() || 'Success';
+    else if (!l.includes(':')) {
+      const toks = l.split(/[\t ]+/).map(t => t.trim()).filter(Boolean);
+      for (let t = toks.length - 1; t >= 1; t--) {
+        let raw = toks[t].replace(/^Rp\s*/i, '').trim();
+        const par = /^\((.*)\)$/.test(raw); if (par) raw = raw.slice(1, -1);
+        const r = numSigned(raw);
+        const plain = /^\d{1,9}$/.test(raw);
+        if (r || plain) {
+          rec.amountRaw = raw; if (par || (r && r.neg)) rec.neg = true;
+          let u = toks[t - 1];
+          if (/^rp$/i.test(u) && t >= 2) u = toks[t - 2];
+          if (u && !/^rp$/i.test(u)) rec.username = u;
+          break;
+        }
+      }
+    }
+  }
+  const v = numVal(rec.amountRaw);
+  rec.amount = v != null ? v : (rec.amountRaw ? (+rec.amountRaw.replace(/[^\d]/g, '') || null) : null);
+  return rec.nnt ? rec : null;
+}
+function parseVENFields(f) {
+  const idxs = []; f.forEach((s, i) => { if (nntOf(s)) idxs.push(i); });
+  if (!idxs.length) return null;
+  const ni = idxs[idxs.length - 1];
+  const start = (idxs.length > 1 ? idxs[idxs.length - 2] : -1) + 1;
+  let bank = '', norek = '', username = '';
+  for (let i = ni - 1; i >= start; i--) { const t = f[i]; if (!t) continue;
+    if (!username && USER_RE.test(t) && !BANK_RE.test(t)) { username = t; continue; }
+    if (!norek && REK_RE.test(t)) { norek = t; continue; }
+    if (!bank && BANK_RE.test(t)) bank = t;
+    if (bank && norek && username) break; }
+  if (!username && ni - 1 >= start) { const t = f[ni - 1];
+    if (t && !BANK_RE.test(t) && !REK_RE.test(t) && /^[A-Za-z0-9][A-Za-z0-9_.\-]*$/.test(t)) username = t; }
+  let amount = null, neg = false;
+  for (let i = ni + 1; i < f.length; i++) { const r = numSigned(f[i]); if (r) { amount = r.v; neg = r.neg; break; } }
+  return { nnt: nntOf(f[ni]), datetime:'', brand:'', platform:'', idn:'', wd:'', bank, namaRek:'',
+           norek, username, amount, neg, validasi:'', idnSt:'', wdSt:'', removed:false };
+}
+function parseVenArr(text) {
+  const out = []; let fail = 0;
+  const lines = text.split(/\r?\n/);
+  const orderRe = /^\s*Order\s*:/i;
+  const headRe = /^\s*\d{4}-\d{2}-\d{2}[ T][\d:]+\s/;
+  const starts = [];
+  lines.forEach((l, i) => {
+    if (!orderRe.test(l)) return;
+    const s = (i > 0 && headRe.test(lines[i - 1])) ? i - 1 : i;
+    if (starts.length && starts[starts.length - 1] === s) return;
+    starts.push(s);
+  });
+  if (starts.length) {
+    const used = new Set();
+    starts.forEach((s, k) => {
+      const e = k + 1 < starts.length ? starts[k + 1] : lines.length;
+      for (let x = s; x < e; x++) used.add(x);
+      const rec = parseVendorBlock(lines.slice(s, e));
+      rec ? out.push(rec) : fail++;
+    });
+    lines.forEach((l, i) => { if (used.has(i) || !l.includes('NNT-') || !/\d/.test(l)) return;
+      const rec = parseVENFields(splitF(l)); rec ? out.push(rec) : fail++; });
+  } else {
+    lines.forEach(l => { if (!/\d/.test(l) || !l.includes('NNT-')) return;
+      const rec = parseVENFields(splitF(l)); rec ? out.push(rec) : fail++; });
+  }
+  return { rows: out, fail, blocks: starts.length || out.length };
+}
+
+// ================= MATCH =================
+function rebuild() {
+  MAP.clear();
+  RDATA.forEach(r => { const k = keyOf(r.nnt); const e = MAP.get(k) || { nnt: r.nnt, ntt: null, ven: null }; e.ntt = r; MAP.set(k, e); });
+  VDATA.forEach(v => { const k = keyOf(v.nnt); const e = MAP.get(k) || { nnt: v.nnt, ntt: null, ven: null }; e.ven = v; MAP.set(k, e); });
+  RDATA.forEach((r, i) => r.no = i + 1);
+  VDATA.forEach((v, i) => v.no = i + 1);
+}
+function matchType(e) { if (e.ntt && e.ven) {
+    const a = e.ntt.amount, b = e.ven.amount;
+    if (a != null && b != null && a !== b) return 'diff';
+    const nr = normRek(e.ntt.norek), vr = normRek(e.ven.norek);
+    if (nr && vr && nr !== vr) return 'rek';
+    return 'both'; }
+  return e.ntt ? 'ntt' : 'ven'; }
+function modeOk(t) {
+  if (modeFilter === 'both') return t === 'both';
+  if (modeFilter === 'diff') return t === 'diff';
+  if (modeFilter === 'rek')  return t === 'rek';
+  if (modeFilter === 'ntt')  return t === 'ntt';
+  if (modeFilter === 'ven')  return t === 'ven';
+  return true; }
+function docRow(e, t) {
+  const v = e.ven, n = e.ntt;
+  const nttNorek = normRek(n && n.norek);
+  const venNorek = (v && v.norek) ? String(v.norek).trim() : '';
+  return { nnt: e.nnt,
+           bank: (v && v.bank) || '',
+           norek: nttNorek || venNorek,
+           username: (n && n.username) || ((v && v.username) || ''),
+           namaRek: (n && n.name) || ((v && v.namaRek) || ''),
+           amount: (n && n.amount != null) ? n.amount : (v ? v.amount : null), type: t };
+}
+
+// ================= ANTI-DOBEL =================
+function mergeRec(oldR, newR, keys) {
+  const m = { ...newR };
+  if (m.status === '-') m.status = '';
+  keys.forEach(k => { if ((m[k] === '' || m[k] == null) && oldR[k] != null && oldR[k] !== '') m[k] = oldR[k]; });
+  if (m.amount == null && oldR.amount != null) { m.amount = oldR.amount;
+    if (oldR.amountRaw != null && m.amountRaw == null) m.amountRaw = oldR.amountRaw; }
+  if (m.no == null && oldR.no != null) m.no = oldR.no;
+  return m; }
+const NTT_MERGE = ['date','bankCode','norek','name','vendorId','exception','status','datetime','revert','username'];
+const VEN_MERGE = ['datetime','brand','platform','idn','wd','bank','namaRek','norek','username','validasi','idnSt','wdSt'];
+function dedupeRows(rows, keys) {
+  const seen = new Map(); let merged = 0;
+  rows.forEach(r => { const k = keyOf(r.nnt);
+    if (seen.has(k)) { seen.set(k, mergeRec(seen.get(k), r, keys)); merged++; }
+    else seen.set(k, r); });
+  return { rows: [...seen.values()], merged }; }
+function sanitizeAll() {
+  const dn = dedupeRows(RDATA, NTT_MERGE); RDATA = dn.rows;
+  const dv = dedupeRows(VDATA, VEN_MERGE); VDATA = dv.rows;
+  rebuild();
+  const nk = new Set(RDATA.map(r => keyOf(r.nnt)));
+  const vk = new Set(VDATA.map(v => keyOf(v.nnt)));
+  [...rSet].forEach(k => { if (!nk.has(k)) rSet.delete(k); });
+  [...vSet].forEach(k => { if (!vk.has(k)) vSet.delete(k); });
+  [...dSet].forEach(k => { if (!nk.has(k) && !vk.has(k)) dSet.delete(k); });
+  if (isolate && !MAP.has(isolate)) { isolate = null; isoDisp = ''; }
+  return dn.merged + dv.merged; }
+function uniqRows(rows) { const s = new Set();
+  return rows.filter(r => { const k = keyOf(r.nnt); if (s.has(k)) return false; s.add(k); return true; }); }
+
+// ===== 🔒 AUDIT =====
+function safetyIssues() {
+  const iss = [];
+  const c1 = {}; RDATA.forEach(r => { const k = keyOf(r.nnt); c1[k] = (c1[k] || 0) + 1; });
+  Object.keys(c1).forEach(k => { if (c1[k] > 1) iss.push('DATA NTT dobel: ' + k); });
+  const c2 = {}; VDATA.forEach(v => { const k = keyOf(v.nnt); c2[k] = (c2[k] || 0) + 1; });
+  Object.keys(c2).forEach(k => { if (c2[k] > 1) iss.push('DATA VENDOR dobel: ' + k); });
+  const c3 = {}; CURD.forEach(d => { const k = keyOf(d.nnt); c3[k] = (c3[k] || 0) + 1; });
+  Object.keys(c3).forEach(k => { if (c3[k] > 1) iss.push('DATA DOC dobel: ' + k); });
+  CURD.forEach(d => {
+    const e = MAP.get(keyOf(d.nnt));
+    if (e && e.ntt) { const nr = normRek(e.ntt.norek);
+      if (nr && String(d.norek || '').trim() !== nr) iss.push('Norek DOC ≠ NTT: ' + d.nnt); } });
+  return iss; }
+function cleanDoubles() {
+  const n = sanitizeAll(); saveState(); render();
+  const iss = safetyIssues();
+  showToast(iss.length ? '⚠ ' + iss.length + ' masalah — cek kartu 🔒' : (n ? '🧹 ' + n + ' NNT dobel digabung — 🔒 AMAN' : '✔ Audit: 🔒 AMAN — tidak ada NTT dobel')); }
+
+// ================= DATA MENTAH =================
+function pushRaw(w, text) {
+  const t = (text || '').trim(); if (!t) return;
+  if (!RAWS[w].includes(t)) RAWS[w].push(t);
+  RAW[w] = RAWS[w].join('\n\n'); }
+function toggleRaw(w) { showRaw[w] = !showRaw[w]; renderRawArea(w); }
+function renderRawArea(w) {
+  const isN = w === 'ntt';
+  const el = document.getElementById(isN ? 'rawTextNtt' : 'rawTextVen');
+  const btn = document.getElementById(isN ? 'btnRawNtt' : 'btnRawVen');
+  const cnt = document.getElementById(isN ? 'rawCntNtt' : 'rawCntVen');
+  el.style.display = showRaw[w] ? 'block' : 'none';
+  btn.classList.toggle('on', showRaw[w]);
+  btn.textContent = showRaw[w] ? '🙈 Sembunyikan' : '📄 Lihat';
+  cnt.textContent = RAWS[w].length ? '(' + RAWS[w].length + ' paste tersimpan • ' + RAW[w].split(/\r?\n/).filter(Boolean).length + ' baris teks)' : '(belum ada)';
+  el.textContent = RAW[w] || '— belum ada data mentah — paste dulu di kotak atas'; }
+function copyRaw(w) { if (!RAW[w]) { showToast('⚠️ Belum ada data mentah ' + (w === 'ntt' ? 'NTT' : 'Vendor')); return; }
+  copyText(RAW[w], 'Data MENTAH ' + (w === 'ntt' ? 'NTT' : 'Vendor') + ' copied! (' + RAWS[w].length + ' paste)'); }
+function clearRaw(w) { RAWS[w] = []; RAW[w] = ''; renderRawArea(w); }
+
+// ================= TAMBAH DATA =================
+function addData(w) {
+  const ta = w === 'ntt' ? taNtt : taVen;
+  const text = ta.value;
+  if (!text.trim()) return;
+  let added = 0, fail = 0, updated = 0, read = 0, dupB = 0;
+  if (w === 'ntt') {
+    const r = modeMinera
+      ? parseMineraArr(text, RDATA.length + 1)
+      : parseNttArr(text, RDATA.length + 1);
+    read = r.blocks;
+    const dd = dedupeRows(r.rows, NTT_MERGE); dupB = dd.merged;
+    dd.rows.forEach(nr => {
+      const k = keyOf(nr.nnt);
+      const ex = RDATA.findIndex(x => keyOf(x.nnt) === k);
+      if (ex >= 0) { RDATA[ex] = mergeRec(RDATA[ex], nr, NTT_MERGE);
+                     rSet.delete(k); dSet.delete(k); updated++; }
+      else { RDATA.push(nr); added++; }
+    });
+    fail = r.fail;
+  } else {
+    const r = parseVenArr(text);
+    read = r.blocks;
+    const dd = dedupeRows(r.rows, VEN_MERGE); dupB = dd.merged;
+    dd.rows.forEach(nr => {
+      const k = keyOf(nr.nnt);
+      const ex = VDATA.findIndex(x => keyOf(x.nnt) === k);
+      if (ex >= 0) { VDATA[ex] = mergeRec(VDATA[ex], nr, VEN_MERGE);
+                     vSet.delete(k); dSet.delete(k); updated++; }
+      else { VDATA.push(nr); added++; }
+    });
+    fail = r.fail;
+  }
+  let dupS = sanitizeAll();
+  CURD = []; let iss = safetyIssues();
+  if (iss.length) { dupS += sanitizeAll(); iss = safetyIssues(); }
+  saveState();
+
+  const info = document.getElementById(w === 'ntt' ? 'infoNtt' : 'infoVen');
+  let msg = `📋 <b>Dibaca: ${read} ${w === 'ntt' ? 'blok' : 'order'}</b>`;
+  if (added) msg += ` • <span class="plus">➕ ${added} baris baru</span>`;
+  if (updated) msg += ` • 🔄 ${updated} digabung (NNT identik — data sama di-paste lagi)`;
+  if (dupB) msg += ` • 🔀 ${dupB} NNT kembar dalam paste digabung`;
+  if (dupS) msg += ` • 🧹 ${dupS} dobel lama dibersihkan`;
+  if (fail) msg += ` • ⚠️ ${fail} gagal`;
+  msg += iss.length ? ` • <b style="color:#f87171">⚠ ${iss.length} masalah — cek kartu 🔒</b>` : ` • <b>🔒 aman — tidak ada NTT dobel</b>`;
+  info.innerHTML = msg;
+
+  if (added + updated === 0) {
+    showToast('⚠️ Tidak ada baris valid — teks TIDAK dihapus, cek format datanya');
+    document.getElementById('result').style.display = MAP.size ? 'block' : 'none';
+    render(); return; }
+
+  pushRaw(w, text);
+  ta.value = '';
+  document.getElementById(w === 'ntt' ? 'chNtt' : 'chVen').style.display = 'flex';
+  document.getElementById('result').style.display = MAP.size ? 'block' : 'none';
+  render();
+  showToast(`➕ +${added} baru — total ${w === 'ntt' ? RDATA.length + ' NTT' : VDATA.length + ' Vendor'}${iss.length ? ' • ⚠ cek 🔒' : ' — 🔒 aman'}`);
+}
+
+// ================= VISIBLE =================
+const searchVal = () => document.getElementById('search').value.toLowerCase().trim();
+function hitHay(hay, q) {
+  if (hay.includes(q)) return true;
+  const qn = q.replace(/[.,\s]/g, '');
+  return !!qn && /^\d+$/.test(qn) && hay.replace(/[.,]/g, '').includes(qn); }
+const venHay = v => [v.no, v.datetime, v.brand, v.platform, v.nnt, v.idn, v.wd, v.bank, v.namaRek, v.norek, v.username, v.amount, v.amount == null ? '' : fmt(v.amount), v.validasi, v.idnSt, v.wdSt]
+  .filter(x => x != null && x !== '').join(' ').toLowerCase();
+
+function visNtt() { const q = searchVal();
+  let rows = RDATA.filter(r => { const k = keyOf(r.nnt);
+    if (rSet.has(k)) return false;
+    if (isolate && k !== isolate) return false;
+    const e = MAP.get(k); if (!modeOk(e ? matchType(e) : 'ntt')) return false;
+    if (q) { const hay = [r.no, r.date, r.amount, r.amount == null ? '' : fmt(r.amount), r.bankCode, r.norek, r.name, r.nnt, r.vendorId, r.exception, r.status, r.datetime, r.revert, r.username]
+      .filter(x => x != null && x !== '').join(' ').toLowerCase();
+      if (!hitHay(hay, q)) return false; }
+    return true; });
+  if (sortMatchN) rows = rows.slice().sort((a, b) =>
+    ((MAP.get(keyOf(b.nnt)) || {}).ven ? 1 : 0) - ((MAP.get(keyOf(a.nnt)) || {}).ven ? 1 : 0));
+  return rows; }
+
+function visVen() { const q = searchVal();
+  const ln = RDATA.filter(r => !rSet.has(keyOf(r.nnt)));
+  const master = ln.length > 0;
+  const nttIdx = new Map();
+  ln.forEach((r, idx) => { const k = keyOf(r.nnt); if (!nttIdx.has(k)) nttIdx.set(k, idx); });
+  let rows;
+  if (master && modeFilter !== 'ven') {
+    rows = VDATA.filter(v => {
+      const k = keyOf(v.nnt);
+      if (vSet.has(k)) return false;
+      if (isolate && k !== isolate) return false;
+      if (!nttIdx.has(k)) return false;
+      if (modeFilter === 'ntt') return false;
+      const e = MAP.get(k);
+      const t = e ? matchType(e) : 'ven';
+      if (modeFilter === 'diff' || modeFilter === 'rek' || modeFilter === 'both') {
+        if (t !== modeFilter) return false;
+      }
+      if (q && !hitHay(venHay(v), q)) return false;
+      return true; });
+    rows.sort((a, b) => (nttIdx.get(keyOf(a.nnt)) ?? 1e9) - (nttIdx.get(keyOf(b.nnt)) ?? 1e9));
+  } else {
+    rows = VDATA.filter(v => {
+      const k = keyOf(v.nnt);
+      if (vSet.has(k)) return false;
+      if (isolate && k !== isolate) return false;
+      const e = MAP.get(k);
+      const tEff = (e && e.ntt && !rSet.has(k)) ? matchType(e) : 'ven';
+      if (!modeOk(tEff)) return false;
+      if (q && !hitHay(venHay(v), q)) return false;
+      return true; });
+  }
+  return rows; }
+
+function visDoc() { const q = searchVal(); const out = []; const seen = new Set();
+  RDATA.forEach(r => {
+    const k = keyOf(r.nnt);
+    if (rSet.has(k)) return;
+    const e = MAP.get(k);
+    if (!e || !e.ven) return;
+    if (vSet.has(k) || dSet.has(k)) return;
+    if (isolate && k !== isolate) return;
+    if (seen.has(k)) return; seen.add(k);
+    const t = matchType(e);
+    if (t !== 'both') return;
+    if (modeFilter === 'diff' || modeFilter === 'rek' || modeFilter === 'ntt' || modeFilter === 'ven') return;
+    const d = docRow(e, t);
+    if (q) { const hay = [d.bank, d.norek, d.username, d.namaRek, e.nnt, d.amount == null ? '' : fmt(d.amount), d.amount == null ? '' : String(d.amount)]
+      .filter(x => x != null && x !== '').join(' ').toLowerCase();
+      if (!hitHay(hay, q)) return; }
+    out.push(d); });
+  return out; }
+const badge = t => t === 'both' ? '<span class="bdg ok">✓ Match</span>'
+  : t === 'diff' ? '<span class="bdg warn">≠ Nominal</span>'
+  : t === 'rek'  ? '<span class="bdg warn">Rek≠</span>'
+  : t === 'ntt' ? '<span class="bdg n">NTT saja</span>' : '<span class="bdg v">⏳ Tunggu NTT</span>';
+const stBdg = s => { if (!s || s === '-') return '<span class="dim">—</span>';
+  return /FAIL|REJECT|CANCEL|EXPIRED/i.test(s) ? `<span class="bdg bad">${s}</span>` : `<span class="bdg ok">${s}</span>`; };
+const amtCell = (a, neg, warn) => a == null ? '<td class="amt dim">—</td>'
+  : `<td class="amt${neg ? ' neg' : ''}${warn ? ' warn' : ''}">${neg ? '-' : ''}${fmt(a)}</td>`;
+const D = v => (v == null || v === '') ? '<span class="dim">—</span>' : v;
+
+// ================= RAW SHEET MINI =================
+function renderRaw() {
+  const rn = document.getElementById('rawNtt'), rv = document.getElementById('rawVen');
+  rn.innerHTML = RDATA.length ? `<table>
+    <thead><tr><th style="width:30px">No</th><th>Tgl</th><th style="text-align:right">Amount</th><th>BC</th><th>No. Rek</th><th>Nama</th><th>NNT</th><th>Vendor Id</th><th>Status</th></tr></thead>
+    <tbody>${RDATA.map(r => { const e = MAP.get(keyOf(r.nnt)), m = e && e.ven;
+      return `<tr${m ? ' class="rowm"' : ''}><td class="num">${r.no}</td><td class="mono">${D(r.date)}</td>
+      ${amtCell(r.amount)}<td class="mono">${D(r.bankCode)}</td><td class="mono">${D(r.norek)}</td><td>${D(r.name)}</td>
+      <td class="mono nnt" onclick="copyText('${r.nnt}','NNT copied!')" title="klik = copy kode NNT saja">${r.nnt}</td>
+      <td class="mono dim">${D(r.vendorId)}</td>
+      <td>${stBdg(r.status)}</td></tr>`; }).join('')}</tbody></table>` : '';
+  rv.innerHTML = VDATA.length ? `<table>
+    <thead><tr><th style="width:30px">No</th><th>Datetime</th><th>Brand</th><th>Bank</th><th>No. Rek</th><th>Nama Rek</th><th>User</th><th style="text-align:right">Nominal</th><th>Validasi</th></tr></thead>
+    <tbody>${VDATA.map(v => { const e = MAP.get(keyOf(v.nnt)), m = e && e.ntt;
+      return `<tr${m ? ' class="rowm"' : ''}><td class="num">${v.no}</td><td class="mono">${D(v.datetime)}</td>
+      <td>${D(v.brand)}</td><td>${D(v.bank)}</td><td class="mono">${D(v.norek)}</td><td>${D(v.namaRek)}</td>
+      <td class="mono">${D(v.username)}</td>${amtCell(v.amount, v.neg)}<td>${stBdg(v.validasi)}</td></tr>`; }).join('')}</tbody></table>` : '';
+}
+
+// ================= RENDER =================
+function render() {
+  CURR = visNtt(); CURV = visVen(); CURD = visDoc();
+
+  const grp = {};
+  CURD.forEach(d => { if (!d.norek) return;
+    const rk = d.norek.trim() + '|' + (d.amount == null ? '' : d.amount);
+    (grp[rk] = grp[rk] || []).push(d); });
+  CURD.forEach(d => { if (!d.norek) { d.paired = 0; return; }
+    const rk = d.norek.trim() + '|' + (d.amount == null ? '' : d.amount);
+    d.paired = (grp[rk] || []).length; });
+  const pairGrps = Object.values(grp).filter(a => a.length > 1).length;
+
+  renderRaw();
+  renderRawArea('ntt'); renderRawArea('ven');
+  updateDayLabel();
+
+  document.getElementById('bNtt').innerHTML = CURR.map((r, i) => {
+    const e = MAP.get(keyOf(r.nnt)), m = e && e.ven;
+    return `<tr${m ? ' class="rowm"' : ''}>
+    <td class="num">${i + 1}</td>
+    <td class="mono">${D(r.date)}</td>
+    ${amtCell(r.amount)}
+    <td class="mono">${D(r.bankCode)}</td>
+    <td class="mono">${D(r.norek)}</td>
+    <td>${D(r.name)}</td>
+    <td class="mono nnt" onclick="copyNnt(${i})" title="klik = copy kode NNT saja">${r.nnt}</td>
+    <td class="mono dim">${D(r.vendorId)}</td>
+    <td class="dim">${D(r.exception)}</td>
+    <td>${stBdg(r.status)}</td>
+    <td class="mono">${D(r.datetime)}</td>
+    <td>${r.revert ? stBdg(r.revert) : '<span class="dim">—</span>'}</td>
+    <td>${e ? badge(matchType(e)) : badge('ntt')}</td>
+    <td>${m ? `<button class="mini vv" onclick="copyVenOf(${i})" title="copy data VENDOR pasangan NNT ini">⬇V</button> ` : ''}
+        <button class="mini" onclick="traceNtt(${i})" title="lacak pasangan">🎯</button>
+        <button class="del" onclick="delR(${i})">✕</button></td></tr>`; })
+    .join('') || `<tr><td colspan="14" class="empty">${isolate ? '🎯 tidak ada baris NTT untuk NNT yang dilacak' : '❌ Tidak ada data NTT — paste di panel atas'}</td></tr>`;
+
+  document.getElementById('bVen').innerHTML = CURV.map((v, i) => {
+    const e = MAP.get(keyOf(v.nnt)), m = e && e.ntt;
+    const idnwd = [v.idnSt, v.wdSt].filter(Boolean).join(' / ');
+    return `<tr${m ? ' class="rowm"' : ''}>
+    <td class="num" title="nomor urut mengikuti urutan DATA NTT">${i + 1}</td>
+    <td class="mono">${D(v.datetime)}</td>
+    <td>${D(v.brand)}</td>
+    <td>${D(v.platform)}</td>
+    <td class="mono nnt" onclick="copyVnnt(${i})" title="klik = copy kode NNT saja">${v.nnt}</td>
+    <td class="mono">${D(v.idn)}</td>
+    <td class="mono">${D(v.wd)}</td>
+    <td>${D(v.bank)}</td>
+    <td>${D(v.namaRek)}</td>
+    <td class="mono">${D(v.norek)}</td>
+    <td class="mono">${D(v.username)}</td>
+    ${amtCell(v.amount, v.neg)}
+    <td>${stBdg(v.validasi)}</td>
+    <td class="dim">${D(idnwd)}</td>
+    <td>${e ? badge(matchType(e)) : badge('ven')}</td>
+    <td><button class="mini" onclick="copyVenRow(${i})" title="copy baris vendor ini">⧉</button>
+        <button class="mini" onclick="traceVen(${i})" title="lacak di NTT">🎯</button>
+        <button class="del" onclick="delV(${i})">✕</button></td></tr>`; })
+    .join('') || (function() {
+      if (isolate) return '<tr><td colspan="16" class="empty">🎯 <b>NNT ini TIDAK ADA di Vendor</b></td></tr>';
+      if (!VDATA.length) return '<tr><td colspan="16" class="empty">❌ Tidak ada data Vendor — paste di panel atas</td></tr>';
+      const master = RDATA.filter(r => !rSet.has(keyOf(r.nnt))).length > 0;
+      if (master && modeFilter === 'diff') return '<tr><td colspan="16" class="empty">✔ Tidak ada baris nominal beda</td></tr>';
+      if (master && modeFilter === 'rek') return '<tr><td colspan="16" class="empty">✔ Tidak ada baris norek beda</td></tr>';
+      if (master && modeFilter === 'ntt') return '<tr><td colspan="16" class="empty">Filter "NTT saja": sheet vendor <b>kosong</b> — NTT yang tampil justru yang <b>belum ada pasangan vendor</b></td></tr>';
+      if (master) return '<tr><td colspan="16" class="empty">❌ Belum ada vendor dengan <b>KODE + NOREK + NOMINAL sama</b> seperti NTT — baris beda (≠/Rek≠/⏳) disembunyikan (audit lewat chip)</td></tr>';
+      return '<tr><td colspan="16" class="empty">❌ Tidak ada baris untuk filter/pencarian ini</td></tr>'; })();
+
+  document.getElementById('bDoc').innerHTML = CURD.map((d, i) => `<tr>
+    <td class="num" title="nomor urut mengikuti urutan DATA NTT">${i + 1}</td><td class="num">✓</td>
+    <td>${D(d.bank)}</td><td class="mono" title="norek dari DATA NTT (master) — tidak mungkin tertukar">${D(d.norek)}</td><td class="mono">${D(d.username)}</td><td>${D(d.namaRek)}</td>
+    ${amtCell(d.amount)}
+    <td>${badge(d.type)}${d.paired > 1 ? ` <span class="bdg info" title="Norek & nominal sama dengan ${d.paired - 1} baris lain — tapi KODE NNT BERBEDA → transaksi BERBEDA → tetap dipisah, TIDAK digabung. Ini wajar, bukan dobel.">×${d.paired} transaksi</span>` : ''}</td>
+    <td><button class="mini" onclick="copyDocRow(${i})" title="copy baris DOC">⧉</button>
+        <button class="del" onclick="delD(${i})" title="buang baris DOC">✕</button></td></tr>`)
+    .join('') || (function() {
+      const ln = RDATA.filter(r => !rSet.has(keyOf(r.nnt))).length;
+      const lv = VDATA.filter(v => !vSet.has(keyOf(r.nnt))).length;
+      if (isolate) return '<tr><td colspan="9" class="empty">🎯 NNT ini belum match penuh (kode+rek+nominal) di kedua sisi</td></tr>';
+      if (!ln) return '<tr><td colspan="9" class="empty">❌ DATA NTT (master) masih kosong — paste DATA NTT dulu</td></tr>';
+      if (modeFilter === 'diff') return '<tr><td colspan="9" class="empty">Filter ≠ Nominal Beda: baris nominal beda <b>TIDAK masuk DOC</b></td></tr>';
+      if (modeFilter === 'rek') return '<tr><td colspan="9" class="empty">Filter Rek≠ Beda: baris norek beda <b>TIDAK masuk DOC</b> — audit di sheet VENDOR/NTT</td></tr>';
+      if (modeFilter === 'ven') return '<tr><td colspan="9" class="empty">Filter ⏳ Vendor saja (audit): vendor tanpa NTT <b>tidak masuk DOC</b></td></tr>';
+      if (modeFilter === 'ntt') return '<tr><td colspan="9" class="empty">Filter NTT saja: NTT tanpa pasangan Vendor tidak masuk DOC</td></tr>';
+      return '<tr><td colspan="9" class="empty">❌ Belum ada pasangan <b>KODE + NOREK + NOMINAL sama</b> antara DATA NTT (' + ln + ') dan DATA VENDOR (' + lv + ')</td></tr>'; })();
+
+  const iss = safetyIssues();
+  const safeEl = document.getElementById('cSafe');
+  if (iss.length) { safeEl.textContent = '⚠ ' + iss.length + ' masalah';
+    safeEl.className = 'value unsafe'; safeEl.title = iss.slice(0, 8).join('\n') + (iss.length > 8 ? '\n...' : ''); }
+  else { safeEl.textContent = '🔒 AMAN'; safeEl.className = 'value safe';
+    safeEl.title = 'Audit: tidak ada NTT/Vendor/DOC dobel (per NTT), semua norek DOC sesuai NTT-nya.' +
+      (pairGrps ? '\n' + pairGrps + ' grup norek+nominal sama dipertahankan TERPISAH (NNT beda = transaksi berbeda — tidak digabung).' : '\nDobel dihitung dari NNT saja; norek+nominal sama tidak pernah digabung.'); }
+
+  const liveN = RDATA.filter(r => !rSet.has(keyOf(r.nnt))), liveV = VDATA.filter(v => !vSet.has(keyOf(v.nnt)));
+  const master = liveN.length > 0;
+  let both = 0, diff = 0, rek = 0, ntonly = 0, venonly = 0, matchTot = 0;
+  MAP.forEach((e, k) => {
+    if (vSet.has(k) || dSet.has(k)) return;
+    const nttLive = e.ntt && !rSet.has(k);
+    if (nttLive && e.ven) {
+      const t = matchType(e);
+      if (t === 'both') { both++;
+        const a = (e.ntt.amount != null) ? e.ntt.amount : e.ven.amount;
+        if (a != null) matchTot += a; }
+      else if (t === 'diff') diff++;
+      else if (t === 'rek') rek++;
+    } else if (nttLive) ntonly++;
+    else if (e.ven) venonly++;
+  });
+  document.getElementById('cNtt').textContent = CURR.length + ' / ' + liveN.length;
+  document.getElementById('cVen').textContent = CURV.length + ' / ' + liveV.length;
+  document.getElementById('cMatch').textContent = both;
+  document.getElementById('cDoc').textContent = fmt(matchTot);
+  document.getElementById('hNtt').textContent = '(' + liveN.length + ')';
+  document.getElementById('hVen').textContent = '(' + liveV.length + ')';
+  document.getElementById('tNtt').textContent = '(' + CURR.length + ' baris)';
+  document.getElementById('tVen').textContent = master
+    ? (modeFilter === 'diff' ? '(' + CURV.length + ' baris nominal beda (audit) • tidak masuk DOC)'
+       : modeFilter === 'rek' ? '(' + CURV.length + ' baris norek beda (audit) • tidak masuk DOC)'
+       : modeFilter === 'ntt' ? '(0 baris — filter NTT saja: vendor tanpa pasangan)'
+       : '(' + CURV.length + ' match kode+rek+nominal dari ' + liveN.length + ' NTT • urut NTT • ' + (diff + rek + venonly) + ' disembunyikan: ' + diff + '≠ ' + rek + 'Rek≠ ' + venonly + '⏳)')
+    : '(' + CURV.length + ' baris — belum ada DATA NTT, belum difilter)';
+  document.getElementById('tDoc').textContent = '(' + CURD.length + ' match • norek dari NTT • total ' + fmt(matchTot) +
+    (pairGrps ? ' • ' + pairGrps + ' grup rek sama (NNT beda — wajar, terpisah)' : '') + ')';
+  document.getElementById('btnMN').classList.toggle('on', sortMatchN);
+  const cnt = { '': both + diff + rek, both, diff, rek, ntt: ntonly, ven: venonly };
+  document.querySelectorAll('#matchChips .chip').forEach(c =>
+    c.textContent = c.textContent.replace(/\(\d+\)/, '(' + cnt[c.dataset.m] + ')'));
+
+  const tb = document.getElementById('traceBar');
+  if (isolate) { tb.style.display = 'flex'; document.getElementById('traceNnt').textContent = isoDisp; }
+  else tb.style.display = 'none';
+
+  document.getElementById('chNtt').style.display = taNtt.value ? 'none' : 'flex';
+  document.getElementById('chVen').style.display = taVen.value ? 'none' : 'flex';
+  saveState();
+}
+
+// ================= OUTPUT =================
+function nttOut(r) { return r.norek + '\t' + r.username + '\t' + r.nnt + '\t\t' + (r.amount == null ? '' : fmt(r.amount)); }
+function venOut(v) { return v.bank + '\t' + v.norek + '\t' + v.username + '\t' + v.nnt + '\t' + (v.amount == null ? '' : ('-' + fmt(v.amount))); }
+function docOut(d) { return d.bank + '\t' + d.norek + '\t' + d.username + '\t' + d.namaRek + '\t' + (d.amount == null ? '' : fmt(d.amount)); }
+
+function copyText(t, msg) {
+  const done = () => { const el = document.getElementById('toast');
+    el.textContent = '✔ ' + msg; el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 1300); };
+  if (navigator.clipboard) navigator.clipboard.writeText(t).then(done).catch(() => fb(t, done));
+  else fb(t, done); }
+function fb(t, done) { const x = document.createElement('textarea'); x.value = t;
+  document.body.appendChild(x); x.select(); document.execCommand('copy');
+  document.body.removeChild(x); done(); }
+
+function copyNnt(i)  { copyText(CURR[i].nnt, 'NNT copied!'); }
+function copyVnnt(i) { copyText(CURV[i].nnt, 'NNT copied!'); }
+function copyVenOf(i) { const e = MAP.get(keyOf(CURR[i].nnt));
+  if (e && e.ven) copyText(venOut(e.ven), 'Data Vendor copied!'); }
+function copyVenRow(i) { copyText(venOut(CURV[i]), 'Baris Vendor copied!'); }
+function copyDocRow(i) { copyText(docOut(CURD[i]), 'Baris DOC copied!'); }
+function copyVenAll() {
+  const rows = uniqRows(VDATA.filter(v => {
+    const k = keyOf(v.nnt);
+    const e = MAP.get(k);
+    return e && e.ntt && !vSet.has(k);
+  }));
+  if (!rows.length) { showToast('⚠️ Tidak ada data Vendor yang sesuai dengan NTT'); return; }
+  copyText(rows.map(venOut).join('\n'), rows.length + ' baris Vendor (yang sesuai NTT) copied!'); }
+
+function setIso(nnt) { const k = keyOf(nnt);
+  if (isolate === k) { isolate = null; isoDisp = ''; }
+  else { isolate = k; isoDisp = nnt; }
+  render(); }
+function traceNtt(i) { setIso(CURR[i].nnt); }
+function traceVen(i) { setIso(CURV[i].nnt); }
+function releaseTrace() { isolate = null; isoDisp = ''; render(); }
+
+function copySec(w) {
+  if (w === 'ntt') { const rows = uniqRows(CURR); if (!rows.length) return;
+    copyText(rows.map(nttOut).join('\n'), rows.length + ' baris NTT copied!'); }
+  else if (w === 'ven') { const rows = uniqRows(CURV); if (!rows.length) return;
+    copyText(rows.map(venOut).join('\n'), rows.length + ' baris Vendor (tampil) copied!'); }
+  else { if (!CURD.length) { showToast('⚠️ DOC kosong — belum ada KODE+REK+NOMINAL sama'); return; }
+    const iss = safetyIssues();
+    if (iss.length) { showToast('⚠ Ada ' + iss.length + ' masalah — cek kartu 🔒 dulu'); return; }
+    copyText(uniqRows(CURD).map(docOut).join('\n'), CURD.length + ' baris DOC copied!'); } }
+function copyAll() { copySec('doc'); }
+
+function delR(i) { rSet.add(keyOf(CURR[i].nnt)); render(); }
+function delV(i) { vSet.add(keyOf(CURV[i].nnt)); render(); }
+function delD(i) { dSet.add(keyOf(CURD[i].nnt)); render(); }
+function resetAll() { rSet.clear(); vSet.clear(); dSet.clear(); render(); showToast('↩ Semua baris dikembalikan'); }
+function clearPanel(w) {
+  if (w === 'ntt') { RDATA = []; rSet.clear(); document.getElementById('infoNtt').innerHTML = ''; }
+  else { VDATA = []; vSet.clear(); document.getElementById('infoVen').innerHTML = ''; }
+  clearRaw(w);
+  sanitizeAll(); saveState();
+  render(); showToast('🗑 Panel ' + (w === 'ntt' ? 'NTT' : 'Vendor') + ' dikosongkan (data + mentah)'); }
+function clearAll() { wipeAllData();
+  try { localStorage.removeItem(LS_KEY); } catch (e) {}
+  saveState();
+  showToast('🗑 Semua data hari ini dibersihkan'); }
+function showToast(m) { const el = document.getElementById('toast');
+  el.textContent = m; el.style.display = 'block'; setTimeout(() => el.style.display = 'none', 2000); }
+function toggleMatchSort(w) { sortMatchN = !sortMatchN; render(); }
+
+// ---------- EVENTS ----------
+let d1, d2;
+function schedAdd(w) {
+  const ta = w === 'ntt' ? taNtt : taVen;
+  document.getElementById(w === 'ntt' ? 'chNtt' : 'chVen').style.display = ta.value ? 'none' : 'flex';
+  if (w === 'ntt') { clearTimeout(d1); d1 = setTimeout(() => addData('ntt'), 450); }
+  else { clearTimeout(d2); d2 = setTimeout(() => addData('ven'), 450); } }
+taNtt.addEventListener('input', () => schedAdd('ntt'));
+taVen.addEventListener('input', () => schedAdd('ven'));
+taNtt.addEventListener('paste', () => setTimeout(() => schedAdd('ntt'), 20));
+taVen.addEventListener('paste', () => setTimeout(() => schedAdd('ven'), 20));
+document.getElementById('search').addEventListener('input', render);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') releaseTrace(); });
+document.querySelectorAll('#matchChips .chip').forEach(c => c.onclick = () => {
+  document.querySelectorAll('#matchChips .chip').forEach(x => x.classList.remove('active'));
+  c.classList.add('active'); modeFilter = c.dataset.m; render(); });
+
+// ---------- MULAI ----------
+updateDayLabel();
+renderRawArea('ntt'); renderRawArea('ven');
+// Restore MODE MINERA
+try {
+  if (localStorage.getItem('ntt_mode_minera') === '1') {
+    const cb = document.getElementById('modeMinera');
+    if (cb) { cb.checked = true; toggleMineraMode(); }
+  }
+} catch(e) {}
+if (loadState()) {
+  sanitizeAll();
+  document.getElementById('result').style.display = MAP.size ? 'block' : 'none';
+  render();
+  showToast('📂 Data hari ini dipulihkan: ' + RDATA.length + ' NTT + ' + VDATA.length + ' Vendor');
+} else {
+  render();
+  if (newDayCleared) showToast('🌅 Hari baru (' + CUR_DAY + ') — data kemarin dibersihkan otomatis');
+}
+</script>
+</body>
+</html>

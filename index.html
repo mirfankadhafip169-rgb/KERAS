@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filter Withdraw</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="wrap">
+        <div class="topbar">
+            <div>
+                <h1>Filter Withdraw</h1>
+                <p>Otomatis filter &amp; format data withdraw</p>
+            </div>
+            <div class="topbar-right">
+                <!-- Stats compact (REVIEW) -->
+                <div class="top-stats" id="topRevStats" style="display:none;">
+                    <div class="top-stat ok"><span class="n" id="topRevOk">0</span><span class="l">Berhasil</span></div>
+                    <div class="top-stat warn"><span class="n" id="topRevSkip">0</span><span class="l">Dilewati</span></div>
+                    <div class="top-stat ew"><span class="n" id="topRevEw">0</span><span class="l">E-Wallet</span></div>
+                    <div class="top-stat money"><span class="n" id="topRevTotal">0</span><span class="l">Total</span></div>
+                </div>
+                <!-- Stats compact (ADMIN) -->
+                <div class="top-stats" id="topAdmStats" style="display:none;">
+                    <div class="top-stat ok"><span class="n" id="topAdmOk">0</span><span class="l">Berhasil</span></div>
+                    <div class="top-stat warn"><span class="n" id="topAdmOver">0</span><span class="l">Di Atas Batas</span></div>
+                    <div class="top-stat ew"><span class="n" id="topAdmEw">0</span><span class="l">E-Wallet</span></div>
+                    <div class="top-stat money"><span class="n" id="topAdmTotal">0</span><span class="l">Total</span></div>
+                </div>
+                <div class="threshold-box" id="topThreshold" style="display:none; margin-bottom:0;">
+                    <div class="threshold-input">
+                        <span class="rp">Rp</span>
+                        <input type="number" id="admThreshold" value="500000" min="0" step="1000" title="Filter Maksimal Nominal">
+                    </div>
+                </div>
+                <!-- Batas menit antrian lama (REVIEW) -->
+                <div class="minutes-box" id="topMinutes" style="margin-bottom:0;">
+                    <div class="minutes-input">
+                        <input type="number" id="revMinutes" value="10" min="1" max="999" step="1" title="Batas menit antrian lama">
+                        <span class="menit-label">mnt</span>
+                    </div>
+                </div>
+                <!-- Filter Jenis (REVIEW) — multi checkbox -->
+                <div class="filter-box" id="topBankFilter" style="margin-bottom:0;">
+                    <div class="filter-input multi-filter">
+                        <span class="filter-label">Jenis</span>
+                        <button type="button" class="filter-btn" id="revBankBtn" title="Pilih bank / e-wallet">
+                            <span id="revBankLabel">Semua</span>
+                            <span class="arrow">▾</span>
+                        </button>
+                        <div class="filter-dropdown" id="revBankDropdown" style="display:none;">
+                            <label class="chk-all"><input type="checkbox" id="revBankAll" checked> <b>Semua</b></label>
+                            <div class="chk-list">
+                                <label><input type="checkbox" class="rev-bank-cb" value="DANA"> DANA</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="GOPAY"> GOPAY</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="OVO"> OVO</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="LINKAJA"> LINKAJA</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="BCA"> BCA</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="BRI"> BRI</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="BNI"> BNI</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="MANDIRI"> MANDIRI</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="CIMB"> CIMB</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="PERMATA"> PERMATA</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="SEABANK"> SEABANK</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="JAGO"> BANK JAGO</label>
+                                <label><input type="checkbox" class="rev-bank-cb" value="DANAMON"> DANAMON</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+            </div>
+        </div>
+
+        <div class="tabs tabs-3">
+            <button class="tab-btn active" id="tabReview" onclick="switchTab('review')">📋 REVIEW</button>
+            <button class="tab-btn admin" id="tabAdmin" onclick="switchTab('admin')">💼 ADMIN Withdraw</button>
+            <button class="tab-btn ntt" id="tabNtt" onclick="switchTab('ntt')">📊 NTT ⇄ VENDOR → DOC</button>
+        </div>
+
+        <!-- ===== REVIEW ===== -->
+        <div id="revSection">
+            <div class="card">
+                <div class="label"><span class="pulse-dot"></span> Paste data REVIEW di sini</div>
+                <textarea id="revInput" placeholder="Paste data review di sini..."></textarea>
+                <div class="hint">Format otomatis terdeteksi • Kolom kosong diabaikan</div>
+            </div>
+
+            <div class="result-section" id="revResult">
+                <div class="result-head">
+                    <div class="label">Hasil Filter</div>
+                    <div class="actions">
+                        <button class="btn btn-primary" onclick="copyOut('rev')">📋 Copy</button>
+                        <button class="btn btn-danger" onclick="clearSec('rev')">🗑️ Reset</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="excel-box" id="revOutput"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== ADMIN ===== -->
+        <div id="admSection" style="display:none">
+            <div class="card">
+                <div class="label"><span class="pulse-dot"></span> Paste data ADMIN di sini</div>
+                <textarea id="admInput" placeholder="Paste data admin withdraw di sini..."></textarea>
+                <div class="hint">Format otomatis terdeteksi • Data di atas batas akan dilewati</div>
+            </div>
+
+            <div class="result-section" id="admResult">
+                <div class="result-head">
+                    <div class="label">Hasil Filter</div>
+                    <div class="actions">
+                        <button class="btn btn-purple" onclick="copyOut('adm')">📋 Copy</button>
+                        <button class="btn btn-danger" onclick="clearSec('adm')">🗑️ Reset</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="excel-box" id="admOutput"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== NTT ⇄ VENDOR → DOC ===== -->
+        <div id="nttSection" style="display:none">
+            <div class="ntt-frame-wrap">
+                <iframe id="nttFrame" src="ntt.html" title="DATA NTT ⇄ DATA VENDOR → DATA DOC"></iframe>
+            </div>
+        </div>
+
+        <div class="footer" id="mainFooter">Filter Withdraw • Auto format e-wallet prefix</div>
+    </div>
+
+    <div id="toast"></div>
+    
+
+    <script src="script.js"></script>
+</body>
+</html>
